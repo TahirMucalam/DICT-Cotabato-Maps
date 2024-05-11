@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotabato City</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.css" />
+    <!-- Leaflet.draw CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="design.css">
+    <style>
+        /* Existing CSS styles */
+        #map {
+            height: 0px;
+            width: 1300px;
+            float: left;
+        }
+        .sidebar-container {
+            background-color: #3b91f385;
+            position: fixed;
+            top: 0px;
+            bottom: 0px;
+            right: 0;
+            left: 0px;
+            width: 100%;
+            z-index: 1000;
+            overflow: auto;
+        }
+        
+        .sidebar-header {
+            text-align: center;
+            background-color: rgba(34, 81, 235, 0.76);
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            padding-left: 10px;
+            justify-content: space-between;
+            align-items: center;
+            position: relative; /* Add position relative */
+            bottom: 0px;
+            left: 0px;
+        
+            
+        }
+        .marker-list {
+            list-style: none;
+            padding: 0;
+        }
+        .marker-list-item {
+            margin-left: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+       
+        .sidebar-actions {
+            margin-top: 20px;
+        }
+        .sidebar-action-btn {
+            width: 45px;
+            padding: 0.690rem 0.50rem;
+            font-size: 0.875rem;
+            position: absolute;
+            transform: translateX(-50%);
+            right: 20px;
+        }
+        #toggleButton {
+           position: absolute;
+           right: -10px;
+        }
+        .marker-label {
+            position: absolute;
+            top: -72px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.842);
+            border: 1px solid #ccc;
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            max-width: 200px; /* Set maximum width for the label box */
+            word-wrap: break-word; /* Allow text to wrap within the box */
+            text-align: center; /* Center-align the text */
+            white-space: pre-line; /* Preserve line breaks */
+            min-height: 40px; /* Minimum height for the label box */
+        }
+
+        /* Additional CSS for dropdown */
+        .dropdown-menu .dropdown-btns {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .dropdown-menu .dropdown-btns .btn {
+            margin-right: 5px;
+        }
+
+        /* CSS for marker count */
+        .marker-count {
+            text-align: right;
+            position: fixed;
+            bottom: 0px;
+            right: 18px;
+            width: auto;
+            padding: 10px;
+            background-color: rgba(35, 85, 247, 0.664);
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            z-index: 1001;
+        }
+       /* Add CSS animation for blinking */
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.marker-count span#totalMarkerCount {
+  animation: blink 2s infinite;
+}
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div class="sidebar-container">
+        <div class="sidebar" id="sidebar1">
+            <div class="sidebar-header"> Sites
+              
+               
+                    
+                </button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <div class="leaflet-control-custom">
+                        <div class="dropdown-btns">
+                           
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <ul class="marker-list" id="markerList"></ul>
+            
+            </div>
+            <div class="marker-count" id="markerCount">Total Active Sites: <span id="totalMarkerCount">0</span></div>
+        </div>
+        <div class="sidebar" id="sidebar2">
+           
+               
+            </div>
+            <ul class="marker-list" id="polylineList"></ul>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS (optional) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+    <script>
+        function redirectToURL() {
+            // Set the URL you want to redirect to
+            var redirectURL = "index.html";
+            window.location.href = redirectURL;
+        }
+        // Function to save data to local storage
+        function saveDataToLocalStorage(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+
+        // Function to load data from local storage
+        function loadDataFromLocalStorage(key) {
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : null;
+        }
+
+        // Function to delete a marker by its ID
+        function deleteMarker(id) {
+            // Implementation for deleting a marker
+        }
+
+        // Function to delete a polyline by its ID
+        function deletePolyline(id) {
+            // Implementation for deleting a polyline
+        }
+
+        // Function to calculate the width of the text
+        function getTextWidth(text, font) {
+            var canvas = document.createElement('canvas');
+            var context = canvas.getContext('2d');
+            context.font = font;
+            var metrics = context.measureText(text);
+            return metrics.width;
+        }
+
+        // Function to make the map fullscreen
+        function makeMapFullscreen() {
+            var elem = document.getElementById("map");
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) { /* Safari */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { /* IE11 */
+                elem.msRequestFullscreen();
+            }
+        }
+
+
+        // Initialize the map
+        var map = L.map('map').setView([7.2236, 124.2464], 16); // Zoom level: 16
+
+        // Add OpenStreetMap tile layer to the map
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Initialize the Leaflet.draw control
+        var drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+
+        // Load marker and polyline data from local storage
+        var savedData = loadDataFromLocalStorage('markerAndPolylineData');
+        if (savedData) {
+            var totalMarkers = 0;
+
+            savedData.forEach(function(item) {
+                if (item.type === 'marker') {
+                    totalMarkers++;
+                }
+            });
+
+            document.getElementById('totalMarkerCount').textContent = totalMarkers;
+
+            savedData.forEach(function(item) {
+                // Load existing markers and polylines
+            });
+        }
+        var savedData = loadDataFromLocalStorage('markerAndPolylineData');
+        if (savedData) {
+            savedData.forEach(function(item) {
+                if (item.type === 'marker') {
+                    var marker = L.marker(item.coordinates);
+                    var title = item.title;
+                    var areaName = item.areaName; // Retrieve area name from stored data
+                    var serviceType = item.serviceType; // Retrieve service type from stored data
+                    var description = 'Area Name: ' + areaName + '<br>Service Type: ' + serviceType; // Combine area name and service type
+                    var description = '';
+                    var latLng = item.coordinates;
+                    marker.bindPopup(description);
+                    marker.addTo(map);
+
+                    // Adding label above the marker
+                    var labelWidth = getTextWidth(title, '12px Arial') + 10; // Calculate label width dynamically
+                    var label = L.marker([latLng.lat, latLng.lng], {
+                        icon: L.divIcon({
+                            className: 'marker-label',
+                            html: '<div class="label-bar" style="width:' + labelWidth + 'px;">' + title + '</div>',
+                            iconSize: [labelWidth, 20]
+                        })
+                    }).addTo(map);
+                } else if (item.type === 'polyline') {
+                    var polyline = L.polyline(item.coordinates, item.options).addTo(map);
+                }
+            });
+        }
+
+        // Get the reference to the marker list ul element
+        var markerList = document.getElementById('markerList');
+        var polylineList = document.getElementById('polylineList');
+
+        // Array to store marker objects
+        var markers = [];
+        // Array to store polyline objects
+        var polylines = [];
+
+        // Loop through saved data to create markers and populate the sidebar
+        savedData.forEach(function(item, index) {
+            if (item.type === 'marker') {
+                var title = item.title || ('Marker ' + (index + 1)); // Use 'Marker N' if title is not available
+                var listItem = document.createElement('li');
+                listItem.classList.add('marker-list-item');
+                listItem.textContent = title;
+                listItem.addEventListener('click', function() {
+                    // When a marker in the sidebar is clicked, zoom to that marker on the map and open its popup
+                    var marker = markers.find(marker => marker.id === item.id); // Find the marker object by its ID
+                    if (marker) {
+                        map.setView(marker.getLatLng(), 18); // Zoom to marker with zoom level 18
+                        marker.openPopup(); // Open marker's popup
+                    }
+                });
+              
+                markerList.appendChild(listItem);
+
+                // Create marker object and add it to the markers array
+                var marker = L.marker(item.coordinates);
+                marker.id = item.id; // Assign unique ID to marker
+
+                // Create popup content for the marker
+                var popupContent = '<b>' + title + '</b><br>';
+                popupContent += 'Area Name: ' + item.areaName + '<br>'; // Add area name to popup content
+                popupContent += 'Service Type: ' + item.serviceType + '<br>'; // Add service type to popup content
+                popupContent += 'Latitude: ' + item.coordinates.lat.toFixed(6) + '<br>';
+                popupContent += 'Longitude: ' + item.coordinates.lng.toFixed(6);
+
+                marker.bindPopup(popupContent); // Bind popup with content to the marker marker.bindPopup(popupContent); // Bind popup with content to the marker
+                marker.addTo(map); // Add marker to the map
+                markers.push(marker);
+            }
+        });
+
+        // Loop through saved data to create polylines and populate the sidebar
+        savedData.forEach(function(item, index) {
+            if (item.type === 'polyline') {
+                var polylineListItem = document.createElement('li');
+                polylineListItem.classList.add('marker-list-item');
+                polylineListItem.textContent = 'line ' + (index + 1);
+                
+                polylineList.appendChild(polylineListItem);
+
+                // Create polyline object and add it to the polylines array
+                var polyline = L.polyline(item.coordinates, {
+                    color: item.options.color, // Set color
+                    dashArray: item.options.dashArray, // Set dash array
+                    weight: 0.25 // Set weight (thickness)
+                }).addTo(map);
+                polyline.id = item.id; // Assign unique ID to polyline
+                polylines.push(polyline);
+
+                // Add click event listener to the polyline list item to zoom to the corresponding polyline
+                polylineListItem.addEventListener('click', function() {
+                    map.fitBounds(polyline.getBounds());
+                });
+            }
+        });
+
+       
+        // Array to store marker and polyline data
+        var markerAndPolylineData = savedData || [];
+
+        map.on('draw:created', function(event) {
+            var layer = event.layer;
+            var selectedColor = document.getElementById('colorPicker').value;
+            var selectedStyle = document.getElementById('lineStyle').value;
+            if (layer instanceof L.Polyline) {
+                layer.setStyle({color: selectedColor, dashArray: selectedStyle === 'dashed' ? '10, 10' : null});
+                var id = Date.now(); // Generate unique ID for polyline
+                layer.id = id;
+                markerAndPolylineData.push({
+                    type: 'polyline',
+                    id: id,
+                    coordinates: layer.getLatLngs(),
+                    options: {color: selectedColor, dashArray: selectedStyle === 'dashed' ? '10, 10' : null}
+                });
+            } else if (layer instanceof L.Marker) {
+                var title = prompt("Enter marker Location:");
+                var serviceType = prompt("Enter service type:");
+                var areaName = prompt("Enter Building name:"); 
+                var title = prompt("Enter marker Location:");// Prompt for area name
+                var latLng = layer.getLatLng();
+                var latitude = latLng.lat.toFixed(6);
+                var longitude = latLng.lng.toFixed(6);
+                var id = Date.now(); // Generate unique ID for marker
+                markerAndPolylineData.push({
+                    type: 'marker',
+                    id: id,
+                    coordinates: latLng,
+                    title: title,
+                    areaName: areaName, // Store area name in marker data
+                    serviceType: serviceType // Store service type in marker data
+                });
+
+                // Adding label above the marker
+                var labelWidth = getTextWidth(title, '12px Arial') + 10; // Calculate label width dynamically
+                var label = L.marker([latLng.lat, latLng.lng], {
+                    icon: L.divIcon({
+                        className: 'marker-label',
+                        html: '<div class="label-bar" style="width:' + labelWidth + 'px;">' + title + '</div>',
+                        iconSize: [labelWidth, 20]
+                    })
+                }).addTo(map);
+                layer.bindPopup(title);
+            }
+
+            // Add the created layer to the map and drawnItems feature group
+            drawnItems.addLayer(layer);
+            map.addLayer(layer);
+
+            // Save the updated marker and polyline data to local storage
+            saveDataToLocalStorage('markerAndPolylineData', markerAndPolylineData);
+        });
+
+        // Function to delete a marker by its ID
+function deleteMarker(id) {
+    // Find the index of the marker in the markerAndPolylineData array
+    var index = markerAndPolylineData.findIndex(item => item.id === id);
+    if (index !== -1) {
+        // Remove the marker from the markerAndPolylineData array
+        markerAndPolylineData.splice(index, 1);
+        // Find the marker object in the markers array
+        var marker = markers.find(marker => marker.id === id);
+        if (marker) {
+            // Remove the marker from the map
+            map.removeLayer(marker);
+        }
+        // Remove the corresponding list item from the sidebar
+        var listItem = document.querySelector('.marker-list-item');
+        if (listItem) {
+            listItem.remove();
+        }
+        // Save the updated marker and polyline data to local storage
+        saveDataToLocalStorage('markerAndPolylineData', markerAndPolylineData);
+        // Reload the page
+        location.reload();
+    }
+}
+
+// Function to delete a polyline by its ID
+function deletePolyline(id) {
+    // Find the index of the polyline in the markerAndPolylineData array
+    var index = markerAndPolylineData.findIndex(item => item.id === id);
+    if (index !== -1) {
+        // Remove the polyline from the markerAndPolylineData array
+        markerAndPolylineData.splice(index, 1);
+        // Find the polyline object in the polylines array
+        var polyline = polylines.find(polyline => polyline.id === id);
+        if (polyline) {
+            // Remove the polyline from the map
+            map.removeLayer(polyline);
+        }
+        // Remove the corresponding list item from the sidebar
+        var listItem = document.querySelector('.marker-list-item');
+        if (listItem) {
+            listItem.remove();
+        }
+        // Save the updated marker and polyline data to local storage
+        saveDataToLocalStorage('markerAndPolylineData', markerAndPolylineData);
+        // Reload the page
+        location.reload();
+    }
+}
+
+        // Function to calculate the width of the text
+        function getTextWidth(text, font) {
+            var canvas = document.createElement('canvas');
+            var context = canvas.getContext('2d');
+            context.font = font;
+            var metrics = context.measureText(text);
+            return metrics.width;
+        }
+
+        // Function to make the map fullscreen
+        function makeMapFullscreen() {
+            var elem = document.getElementById("map");
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) { /* Safari */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { /* IE11 */
+                elem.msRequestFullscreen();
+            }
+        }
+
+        // Function to trigger playback
+        document.getElementById("playButton").addEventListener("click", function() {
+            makeMapFullscreen(); // Make the map fullscreen
+            // Implement your marker zooming logic here
+            // For example, you can loop through the markers array and zoom to each marker for 8 seconds
+            markers.forEach(function(marker, index) {
+                setTimeout(function() {
+                    map.setView(marker.getLatLng(), 18); // Zoom to marker with zoom level 18
+                    marker.openPopup(); // Open marker's popup
+                }, index * 7000); // Zoom each marker for 8 seconds (8000 milliseconds)
+                
+                
+            });
+            
+        });
+
+        // Rest of the existing JavaScript code...
+    </script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	background-image: url(background.png);
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 100% 100%;
+	font-family: 'Roboto', sans-serif;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100vh;
+	margin: 0;
+}
+
+.login-box {
+	width: 500px;
+	background-color: #fff;
+	padding: 40px;
+	box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+	border-radius: 10px;
+	opacity: 0.9;
+}
+
+button[type="submit"] {
+	background-color: #4CAF50;
+	color: white;
+	padding: 10px 20px;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	margin: 0 auto;
+	display: block;
+}
+
+.login-box h2 {
+	text-align: center;
+	margin-bottom: 30px;
+}
+
+.user-box {
+	position: relative;
+	width: 100%;
+	margin-bottom: 30px;
+}
+
+.user-box input {
+	width: 100%;
+	padding: 15px 20px;
+	font-size: 16px;
+	border: 1px solid #ccc;
+	border-radius: 10px;
+	margin-bottom: 10px;
+}
+
+.user-box label {
+	position: absolute;
+	top: 0;
+	left: 20px;
+	padding: 5px 0;
+	font-size: 16px;
+	color: #ccc;
+	transition: all 0.3s ease;
+	pointer-events: none;
+}
+
+.user-box input:focus ~ label,
+.user-box input:valid ~ label {
+	top: -10px;
+	left: 20px;
+	color: #222
+}
+
+.forgot-password {
+	text-align: center;
+	margin-top: 20px;
+}
+
+button[type="submit"] {
+	background-color: #4CAF50;
+	color: white;
+	padding: 10px 20px;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+}
+
+button[type="submit"]:hover {
+	background-color: #45a049;
+}
